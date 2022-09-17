@@ -80,19 +80,19 @@ const tilesHoriz = 4
 const textureLoader = new THREE.TextureLoader()
 const spriteTexture = textureLoader.load(spriteTextureUrl)
 
-spriteTexture.wrapS = THREE.RepeatWrapping
-spriteTexture.wrapT = THREE.RepeatWrapping
 spriteTexture.repeat.set(1 / tilesHoriz, 1)
 
 const gui = new dat.GUI()
-gui.add(spriteTexture.offset, 'x', 0, 1, 0.25).name('offsetX').listen()
+gui
+  .add(spriteTexture.offset, 'x', 0, 1, 1 / tilesHoriz)
+  .name('offsetX')
+  .listen()
 
 // Sprite
 const spriteMaterial = new THREE.SpriteMaterial({
   map: spriteTexture,
   transparent: true,
 })
-
 const sprite = new THREE.Sprite(spriteMaterial)
 scene.add(sprite)
 sprite.position.y = -1
@@ -177,6 +177,14 @@ scene.add(camera)
 const controls = new OrbitControls(camera, canvas)
 controls.enableDamping = true
 
+// Limit the controls vertically
+controls.maxPolarAngle = 3 * (Math.PI / 4)
+controls.minPolarAngle = Math.PI / 4
+
+// Limit the controls horizontally
+controls.maxAzimuthAngle = Math.PI / 8
+controls.minAzimuthAngle = -(Math.PI / 8)
+
 // Renderer
 const renderer = new THREE.WebGLRenderer({
   canvas: canvas,
@@ -214,7 +222,10 @@ const tick = () => {
 
   if (flameTimeTracker >= showNewFrame) {
     flameTimeTracker = 0
-    spriteTexture.offset.x += 0.25
+    spriteTexture.offset.x =
+      spriteTexture.offset.x === 1 - 1 / tilesHoriz
+        ? 0
+        : spriteTexture.offset.x + 0.25
   }
 
   starsTexture.offset.y += (spriteParams.framesPerSecond / 9) * deltaTime
